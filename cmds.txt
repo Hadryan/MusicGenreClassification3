@@ -1,0 +1,5 @@
+ssh -i ~/.ssh/id_rsa stasdon@84.201.149.215
+
+token=fbc24ac7f70f83d1f30df76846823b1c33778e6b691690a4
+
+ssh -N -f -L localhost:8892:localhost:9032 stasdon@84.201.149.215
