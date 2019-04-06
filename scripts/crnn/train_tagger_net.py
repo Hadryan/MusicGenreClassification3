@@ -26,7 +26,7 @@ TEST = 1
 SAVE_MODEL = 0
 SAVE_WEIGHTS = 0
 
-LOAD_WEIGHTS = 5
+LOAD_WEIGHTS = 17
 
 # Dataset
 MULTIFRAMES = 0
@@ -62,6 +62,7 @@ if not os.path.exists(WEIGHTS_PATH):
 
 # Data Loading
 print('Extracting features for train set:')
+
 if os.path.exists(cfg.DATASET_PATH + 'train.pckl'):
     with open(cfg.DATASET_PATH + 'train.pckl', 'rb') as f:
         X_train = pickle.load(f)
@@ -104,7 +105,7 @@ model.compile(loss='categorical_crossentropy',
 
 if LOAD_WEIGHTS:
     print('Loading weights...')
-    model.load_weights('/Users/StasDon/git/musicgenrerecognition/scripts/crnn/models_trained/crnn_net_adam/weights/crrn_net_adam_epoch{}.h5'.format(LOAD_WEIGHTS))#(WEIGHTS_PATH+MODEL_NAME+'_epoch5.h5')
+    model.load_weights('/home/stasdon/git/musicgenrerecognition/scripts/crnn/models_trained/crnn_net_adam/weights/crnn_net_adam_epoch17.h5')
 
 model.summary()
 
@@ -142,7 +143,7 @@ if TRAIN:
             # f_test.write(str(score_test)+"\n")
             # f_scores.write(str(score_train[0])+","+str(score_train[1])+","+str(score_test[0])+","+str(score_test[1]) + "\n")
 
-            model.save(WEIGHTS_PATH + MODEL_NAME + 'epoch{}.h5'.format(epoch))
+            model.save(WEIGHTS_PATH + MODEL_NAME + '_epoch{}.h5'.format(epoch))
 
 
         f_train.close()
