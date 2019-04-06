@@ -142,7 +142,7 @@ if TRAIN:
             # f_test.write(str(score_test)+"\n")
             # f_scores.write(str(score_train[0])+","+str(score_train[1])+","+str(score_test[0])+","+str(score_test[1]) + "\n")
 
-            model.save(WEIGHTS_PATH + MODEL_NAME + '{}.h5'.format(epoch))
+            model.save(WEIGHTS_PATH + MODEL_NAME + 'epoch{}.h5'.format(epoch))
 
 
         f_train.close()

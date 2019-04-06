@@ -95,31 +95,31 @@ def MusicTaggerCNN(weights='msd', input_tensor=None):
         time_axis = 2
 
     # Input block
-    x = BatchNormalization(axis=time_axis, name='bn_0_freq', trainable=False)(melgram_input)
+    x = BatchNormalization(axis=time_axis, name='bn_0_freq')(melgram_input)
 
     # Conv block 1
-    x = Convolution2D(32, 3, 3, border_mode='same', name='conv1', trainable=False)(x)
-    x = BatchNormalization(axis=channel_axis, mode=0, name='bn1', trainable=False)(x)
+    x = Convolution2D(32, 3, 3, border_mode='same', name='conv1')(x)
+    x = BatchNormalization(axis=channel_axis, mode=0, name='bn1')(x)
     x = ELU()(x)
-    x = MaxPooling2D(pool_size=(2, 4), name='pool1', trainable=False)(x)
+    x = MaxPooling2D(pool_size=(2, 4), name='pool1')(x)
 
     # Conv block 2
-    x = Convolution2D(128, 3, 3, border_mode='same', name='conv2', trainable=False)(x)
-    x = BatchNormalization(axis=channel_axis, mode=0, name='bn2', trainable=False)(x)
+    x = Convolution2D(128, 3, 3, border_mode='same', name='conv2')(x)
+    x = BatchNormalization(axis=channel_axis, mode=0, name='bn2')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(2, 4), name='pool2')(x)
 
     # Conv block 3
-    x = Convolution2D(128, 3, 3, border_mode='same', name='conv3', trainable=False)(x)
-    x = BatchNormalization(axis=channel_axis, mode=0, name='bn3', trainable=False)(x)
+    x = Convolution2D(128, 3, 3, border_mode='same', name='conv3')(x)
+    x = BatchNormalization(axis=channel_axis, mode=0, name='bn3')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(2, 4), name='pool3')(x)
 
     # Conv block 4
-    x = Convolution2D(192, 3, 3, border_mode='same', name='conv4', trainable=False)(x)
-    x = BatchNormalization(axis=channel_axis, mode=0, name='bn4', trainable=False)(x)
+    x = Convolution2D(192, 3, 3, border_mode='same', name='conv4')(x)
+    x = BatchNormalization(axis=channel_axis, mode=0, name='bn4')(x)
     x = ELU()(x)
-    x = MaxPooling2D(pool_size=(3, 5), name='pool4', trainable=False)(x)
+    x = MaxPooling2D(pool_size=(3, 5), name='pool4')(x)
 
     # Conv block 5
     x = Convolution2D(256, 3, 3, border_mode='same', name='conv5')(x)
@@ -143,6 +143,7 @@ def MusicTaggerCNN(weights='msd', input_tensor=None):
                                "You can set it at ~/.keras/keras.json")
         # Create model
         initial_model = Model(melgram_input, x)
+        
         initial_model.load_weights('weights/music_tagger_cnn_weights_%s.h5' % K._BACKEND,
                                    by_name=True)
 
@@ -153,5 +154,8 @@ def MusicTaggerCNN(weights='msd', input_tensor=None):
         last = initial_model.get_layer('Flatten_1')
         preds = (Dense(10, activation='sigmoid', name='preds'))(last.output)
         model = Model(initial_model.input, preds)
+
+        for layer in model.layers[:-6]:
+            layer.trainable = False
 
         return model
