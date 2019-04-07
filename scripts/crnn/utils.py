@@ -5,10 +5,12 @@ import sys
 import librosa
 import audio_processor as ap
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import itertools
 import pandas as pd
 from tqdm import tqdm
+from sklearn.preprocessing import LabelEncoder
 
 sys.path.append('../')
 import config as cfg
@@ -78,9 +80,18 @@ def extract_melgrams(data_path, MULTIFRAMES, process_all_song, num_songs_genre):
     melgrams = np.zeros((0, 1, 96, 1366), dtype=np.float32)
     data = pd.read_csv(data_path)
     song_paths = data.track_id
-    labels = data.genre.apply(lambda x: cfg.GENRES_MAP.get(x))
+    
+    labels_df = pd.read_csv(cfg.DATASET_PATH + 'labels.csv')
+    le = LabelEncoder()
+    le.fit_transform(labels_df.genre.unique())
+    genres_map = dict(zip(le.classes_, le.transform(le.classes_)))
+
+    labels = data.genre.apply(lambda x: genres_map.get(x))
 
     for song_ind, song_path in tqdm(enumerate(song_paths), total=len(data)):
-        melgram = ap.compute_melgram(cfg.AUDIO_DIR + song_path)
-        melgrams = np.concatenate((melgrams, melgram), axis=0)
+        try:
+            melgram = ap.compute_melgram(cfg.AUDIO_DIR + song_path)
+            melgrams = np.concatenate((melgrams, melgram), axis=0)
+        except Exception as ex:
+            print(song_path, ex)
     return melgrams, labels

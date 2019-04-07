@@ -5,9 +5,11 @@ import h5py
 import sys
 from keras.optimizers import SGD
 import numpy as np
+import pandas as pd
 from keras.utils import np_utils
 import pickle
 from math import floor
+from sklearn.preprocessing import LabelEncoder
 
 from music_tagger_cnn import MusicTaggerCNN
 from tagger_net import MusicTaggerCRNN
@@ -26,7 +28,7 @@ TEST = 1
 SAVE_MODEL = 0
 SAVE_WEIGHTS = 0
 
-LOAD_WEIGHTS = 0
+LOAD_WEIGHTS = 29
 
 # Dataset
 MULTIFRAMES = 0
@@ -40,12 +42,18 @@ batch_size = 100
 
 time_elapsed = 0
 
-# GTZAN Dataset Tags
-tags = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+
+labels_df = pd.read_csv(cfg.DATASET_PATH + 'labels.csv')
+le = LabelEncoder()
+le.fit_transform(labels_df.genre.unique())
+
+tags = le.classes_
 tags = np.array(tags)
 
+genres_map = dict(zip(le.classes_, le.transform(le.classes_)))
+
 # Paths to set
-MODEL_NAME = "cnn_net_adam"
+MODEL_NAME = "cnn_net_adam_fma_small"
 MODEL_PATH = "models_trained/" + MODEL_NAME + "/"
 WEIGHTS_PATH = "models_trained/" + MODEL_NAME + "/weights/"
 
@@ -104,7 +112,7 @@ model.compile(loss='categorical_crossentropy',
 
 if LOAD_WEIGHTS:
     print('Loading weights...')
-    model.load_weights('/Users/StasDon/git/musicgenrerecognition/scripts/crnn/models_trained/crnn_net_adam/weights/crrn_net_adam_epoch{}.h5'.format(LOAD_WEIGHTS))#(WEIGHTS_PATH+MODEL_NAME+'_epoch5.h5')
+    model.load_weights(WEIGHTS_PATH + MODEL_NAME + 'epoch{}.h5'.format(LOAD_WEIGHTS))#(WEIGHTS_PATH+MODEL_NAME+'_epoch5.h5')
 
 model.summary()
 
@@ -173,68 +181,15 @@ if TRAIN:
         f.close()
 
 
+
 if TEST:
     t0 = time.time()
     print('Predicting...','\n')
+    
+    y_pred = model.predict(X_test)
 
-    real_labels_mean = load_gt(test_gt_list)
-    real_labels_frames = y_test
-
-    results = np.zeros((X_test.shape[0], tags.shape[0]))
-    predicted_labels_mean = np.zeros((num_frames_test.shape[0], 1))
-    predicted_labels_frames = np.zeros((y_test.shape[0], 1))
-
-
-    song_paths = open(test_songs_list, 'r').read().splitlines()
-
-    previous_numFrames = 0
-    n=0
-    for i in range(0, num_frames_test.shape[0]):
-        print(song_paths[i])
-
-        num_frames=num_frames_test[i]
-        print('Num_frames: ', str(num_frames),'\n')
-
-        results[previous_numFrames:previous_numFrames+num_frames] = model.predict(
-            X_test[previous_numFrames:previous_numFrames+num_frames, :, :, :])
-
-
-        for j in range(previous_numFrames,previous_numFrames+num_frames):
-            #normalize the results
-            total = results[j,:].sum()
-            results[j,:]=results[j,:]/total
-            sort_result(tags, results[j,:].tolist())
-
-            predicted_label_frames=predict_label(results[j,:])
-            predicted_labels_frames[n]=predicted_label_frames
-            n+=1
-
-
-        print('\n',"Mean of the song: ")
-        results_song = results[previous_numFrames:previous_numFrames+num_frames]
-
-        mean=results_song.mean(0)
-        sort_result(tags, mean.tolist())
-
-        predicted_label_mean=predict_label(mean)
-
-        predicted_labels_mean[i]=predicted_label_mean
-        print('\n','Predicted label: ', str(tags[predicted_label_mean]),'\n')
-
-        if predicted_label_mean != real_labels_mean[i]:
-            print('WRONG!!')
-
-
-        previous_numFrames = previous_numFrames+num_frames
-
-        #break
-        print('\n\n\n')
-
-    cnf_matrix_frames = confusion_matrix(real_labels_frames, predicted_labels_frames)
+    cnf_matrix_frames = confusion_matrix(y_test, y_pred)
     plot_confusion_matrix(cnf_matrix_frames, classes=tags, title='Confusion matrix (frames)')
-
-    cnf_matrix_mean = confusion_matrix(real_labels_mean, predicted_labels_mean)
-    plot_confusion_matrix(cnf_matrix_mean, classes=tags, title='Confusion matrix (using mean)')
 
 
 

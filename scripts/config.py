@@ -1,9 +1,8 @@
-
-DATASET_PATH = '/home/stasdon/git/musicgenrerecognition/data/GTZAN/'
+DATASET_PATH = '/home/stasdon/git/musicgenrerecognition/data/fma_small/'
 AUDIO_DIR = DATASET_PATH + 'data/'
 
-TRAIN_PATH = '/home/stasdon/git/musicgenrerecognition/data/GTZAN/train.csv'
-TEST_PATH = '/home/stasdon/git/musicgenrerecognition/data/GTZAN/test.csv'
+TRAIN_PATH = DATASET_PATH + 'train.csv'
+TEST_PATH = DATASET_PATH + '/home/stasdon/git/musicgenrerecognition/data/fma_small/test.csv'
 
 GENRES_MAP = {
  'pop': 0,
