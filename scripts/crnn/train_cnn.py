@@ -28,7 +28,7 @@ TEST = 1
 SAVE_MODEL = 0
 SAVE_WEIGHTS = 0
 
-LOAD_WEIGHTS = 29
+LOAD_WEIGHTS = 5
 
 # Dataset
 MULTIFRAMES = 0
@@ -36,9 +36,8 @@ SAVE_DB = 0
 LOAD_DB = 0
 
 # Model parameters
-nb_classes = 10
 nb_epoch = 40
-batch_size = 100
+batch_size = 200
 
 time_elapsed = 0
 
@@ -47,8 +46,11 @@ labels_df = pd.read_csv(cfg.DATASET_PATH + 'labels.csv')
 le = LabelEncoder()
 le.fit_transform(labels_df.genre.unique())
 
+
 tags = le.classes_
 tags = np.array(tags)
+
+nb_classes = len(tags)
 
 genres_map = dict(zip(le.classes_, le.transform(le.classes_)))
 
@@ -73,20 +75,26 @@ print('Extracting features for train set:')
 if os.path.exists(cfg.DATASET_PATH + 'train.pckl'):
     with open(cfg.DATASET_PATH + 'train.pckl', 'rb') as f:
         X_train = pickle.load(f)
-    y_train = load_gt(cfg.TRAIN_PATH)
+    with open(cfg.DATASET_PATH + 'train_gt.pckl', 'rb') as f:
+        y_train = pickle.load(f)
 else:
     X_train, y_train = extract_melgrams(cfg.TRAIN_PATH, MULTIFRAMES, process_all_song=False, num_songs_genre=20)
-    pickle.dump(X_train, open(cfg.DATASET_PATH + 'train.pckl', "wb"))
+    pickle.dump(X_train, open(cfg.DATASET_PATH + 'train.pckl', "wb"), protocol=4)
+    pickle.dump(y_train, open(cfg.DATASET_PATH + 'train_gt.pckl', "wb"), protocol=4)
+    
 print('X_train shape:', X_train.shape)
 
-print('Extracting features for train set:')
+print('Extracting features for test set:')
 if os.path.exists(cfg.DATASET_PATH + 'test.pckl'):
     with open(cfg.DATASET_PATH + 'test.pckl', 'rb') as f:
         X_test = pickle.load(f)
-    y_test = load_gt(cfg.TEST_PATH)
+        
+    with open(cfg.DATASET_PATH + 'test_gt.pckl', 'rb') as f:
+        y_test = pickle.load(f)
 else:
     X_test, y_test = extract_melgrams(cfg.TEST_PATH, MULTIFRAMES, process_all_song=False, num_songs_genre=10)
-    pickle.dump(X_test, open(cfg.DATASET_PATH + 'test.pckl', "wb"))
+    pickle.dump(X_test, open(cfg.DATASET_PATH + 'test.pckl', "wb"), protocol=4)
+    pickle.dump(y_test, open(cfg.DATASET_PATH + 'test_gt.pckl', "wb"), protocol=4)
 print('X_test shape:', X_test.shape)
 
 
@@ -124,72 +132,72 @@ if SAVE_MODEL:
     f.close()
 
 # Train model
-if TRAIN:
-    try:
-        print ("Training the model")
-        f_train = open(MODEL_PATH+MODEL_NAME+"_scores_training.txt", 'w')
-        f_test = open(MODEL_PATH+MODEL_NAME+"_scores_test.txt", 'w')
-        f_scores = open(MODEL_PATH+MODEL_NAME+"_scores.txt", 'w')
-        for epoch in tqdm(range(LOAD_WEIGHTS + 1,nb_epoch+1)):
-            t0 = time.time()
-            print ("Number of epoch: " +str(epoch)+"/"+str(nb_epoch))
-            sys.stdout.flush()
-            scores = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, verbose=1, validation_data=(X_test, Y_test))
-            time_elapsed = time_elapsed + time.time() - t0
-            print ("Time Elapsed: " +str(time_elapsed))
-            # sys.stdout.flush()
+# if TRAIN:
+#     try:
+print ("Training the model")
+f_train = open(MODEL_PATH+MODEL_NAME+"_scores_training.txt", 'w')
+f_test = open(MODEL_PATH+MODEL_NAME+"_scores_test.txt", 'w')
+f_scores = open(MODEL_PATH+MODEL_NAME+"_scores.txt", 'w')
+for epoch in tqdm(range(LOAD_WEIGHTS + 1,nb_epoch+1)):
+    t0 = time.time()
+    print ("Number of epoch: " +str(epoch)+"/"+str(nb_epoch))
+    sys.stdout.flush()
+    scores = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, verbose=1, validation_data=(X_test, Y_test))
+    time_elapsed = time_elapsed + time.time() - t0
+    print ("Time Elapsed: " +str(time_elapsed))
+    # sys.stdout.flush()
 
-            # score_train = model.evaluate(X_train, Y_train, verbose=0)
-            # print('Train Loss:', score_train[0])
-            # print('Train Accuracy:', score_train[1])
-            # f_train.write(str(score_train)+"\n")
+    # score_train = model.evaluate(X_train, Y_train, verbose=0)
+    # print('Train Loss:', score_train[0])
+    # print('Train Accuracy:', score_train[1])
+    # f_train.write(str(score_train)+"\n")
 
-            # score_test = model.evaluate(X_test, Y_test, verbose=0)
-            # print('Test Loss:', score_test[0])
-            # print('Test Accuracy:', score_test[1])
-            # f_test.write(str(score_test)+"\n")
-            # f_scores.write(str(score_train[0])+","+str(score_train[1])+","+str(score_test[0])+","+str(score_test[1]) + "\n")
+    # score_test = model.evaluate(X_test, Y_test, verbose=0)
+    # print('Test Loss:', score_test[0])
+    # print('Test Accuracy:', score_test[1])
+    # f_test.write(str(score_test)+"\n")
+    # f_scores.write(str(score_train[0])+","+str(score_train[1])+","+str(score_test[0])+","+str(score_test[1]) + "\n")
 
-            model.save(WEIGHTS_PATH + MODEL_NAME + 'epoch{}.h5'.format(epoch))
+    model.save(WEIGHTS_PATH + MODEL_NAME + 'epoch{}.h5'.format(epoch))
 
 
-        f_train.close()
-        f_test.close()
-        f_scores.close()
+f_train.close()
+f_test.close()
+f_scores.close()
 
-        # Save time elapsed
-        f = open(MODEL_PATH+MODEL_NAME+"_time_elapsed.txt", 'w')
-        f.write(str(time_elapsed))
-        f.close()
+# Save time elapsed
+f = open(MODEL_PATH+MODEL_NAME+"_time_elapsed.txt", 'w')
+f.write(str(time_elapsed))
+f.close()
 
     # Save files when an sudden close happens / ctrl C
-    except:
-        f_train.close()
-        f_test.close()
-        f_scores.close()
-        # Save time elapsed
-        f = open(MODEL_PATH + MODEL_NAME + "_time_elapsed.txt", 'w')
-        f.write(str(time_elapsed))
-        f.close()
-    finally:
-        f_train.close()
-        f_test.close()
-        f_scores.close()
-        # Save time elapsed
-        f = open(MODEL_PATH + MODEL_NAME + "_time_elapsed.txt", 'w')
-        f.write(str(time_elapsed))
-        f.close()
+#     except:
+#         f_train.close()
+#         f_test.close()
+#         f_scores.close()
+#         # Save time elapsed
+#         f = open(MODEL_PATH + MODEL_NAME + "_time_elapsed.txt", 'w')
+#         f.write(str(time_elapsed))
+#         f.close()
+#     finally:
+#         f_train.close()
+#         f_test.close()
+#         f_scores.close()
+#         # Save time elapsed
+#         f = open(MODEL_PATH + MODEL_NAME + "_time_elapsed.txt", 'w')
+#         f.write(str(time_elapsed))
+#         f.close()
 
 
 
-if TEST:
-    t0 = time.time()
-    print('Predicting...','\n')
+# if TEST:
+#     t0 = time.time()
+#     print('Predicting...','\n')
     
-    y_pred = model.predict(X_test)
+#     y_pred = model.predict(X_test)
 
-    cnf_matrix_frames = confusion_matrix(y_test, y_pred)
-    plot_confusion_matrix(cnf_matrix_frames, classes=tags, title='Confusion matrix (frames)')
+#     cnf_matrix_frames = confusion_matrix(y_test, y_pred)
+#     plot_confusion_matrix(cnf_matrix_frames, classes=tags, title='Confusion matrix (frames)')
 
 
 

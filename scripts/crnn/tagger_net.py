@@ -123,7 +123,7 @@ def MusicTaggerCRNN(weights='msd', input_tensor=None):
 
     if weights is None:
         # Create model
-        x = Dense(10, activation='sigmoid', name='output')(x)
+        x = Dense(8, activation='sigmoid', name='output')(x)
         model = Model(melgram_input, x)
         return model
     else:
@@ -144,10 +144,10 @@ def MusicTaggerCRNN(weights='msd', input_tensor=None):
 
         # Add new Dense layer
         last = initial_model.get_layer('final_drop')
-        preds = (Dense(10, activation='sigmoid', name='preds'))(last.output)
+        preds = (Dense(8, activation='sigmoid', name='preds'))(last.output)
         model = Model(initial_model.input, preds)
 
-        for layer in model.layers[:-4]:
+        for layer in model.layers[:-6]:
             layer.trainable = False
 
         return model

@@ -12,7 +12,7 @@ import pandas as pd
 from tqdm import tqdm
 from sklearn.preprocessing import LabelEncoder
 
-sys.path.append('../')
+sys.path.append('/home/stasdon/git/musicgenrerecognition/scripts/')
 import config as cfg
 
 
@@ -35,7 +35,12 @@ def predict_label(preds):
 
 def load_gt(path):
     data = pd.read_csv(path)
-    labels = data.genre.apply(lambda x: cfg.GENRES_MAP.get(x))
+    labels_df = pd.read_csv(cfg.DATASET_PATH + 'labels.csv')
+    le = LabelEncoder()
+    le.fit_transform(labels_df.genre.unique())
+    genres_map = dict(zip(le.classes_, le.transform(le.classes_)))
+
+    labels = data.genre.apply(lambda x: genres_map.get(x))
     return labels
 
 
@@ -85,13 +90,16 @@ def extract_melgrams(data_path, MULTIFRAMES, process_all_song, num_songs_genre):
     le = LabelEncoder()
     le.fit_transform(labels_df.genre.unique())
     genres_map = dict(zip(le.classes_, le.transform(le.classes_)))
-
-    labels = data.genre.apply(lambda x: genres_map.get(x))
-
+    
+    labels = data.genre.apply(lambda x: genres_map.get(x)).values
+    
+    song_labels = []
     for song_ind, song_path in tqdm(enumerate(song_paths), total=len(data)):
         try:
             melgram = ap.compute_melgram(cfg.AUDIO_DIR + song_path)
             melgrams = np.concatenate((melgrams, melgram), axis=0)
+            song_labels.append(labels[song_ind])
         except Exception as ex:
             print(song_path, ex)
-    return melgrams, labels
+    
+    return melgrams, song_labels
