@@ -28,7 +28,7 @@ TEST = 1
 SAVE_MODEL = 0
 SAVE_WEIGHTS = 0
 
-LOAD_WEIGHTS = 5
+LOAD_WEIGHTS = 0
 
 # Dataset
 MULTIFRAMES = 0
@@ -51,6 +51,7 @@ tags = le.classes_
 tags = np.array(tags)
 
 nb_classes = len(tags)
+print(nb_classes)
 
 genres_map = dict(zip(le.classes_, le.transform(le.classes_)))
 

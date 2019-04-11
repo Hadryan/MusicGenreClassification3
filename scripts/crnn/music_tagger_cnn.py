@@ -101,43 +101,44 @@ def MusicTaggerCNN(weights='msd', input_tensor=None):
     x = Convolution2D(32, 3, 3, border_mode='same', name='conv1')(x)
     x = BatchNormalization(axis=channel_axis, mode=0, name='bn1')(x)
     x = ELU()(x)
-    x = MaxPooling2D(pool_size=(2, 4), name='pool1')(x)
+    x = MaxPooling2D(pool_size=(2, 4), name='pool1', dim_ordering="th")(x)
 
     # Conv block 2
     x = Convolution2D(128, 3, 3, border_mode='same', name='conv2')(x)
     x = BatchNormalization(axis=channel_axis, mode=0, name='bn2')(x)
     x = ELU()(x)
-    x = MaxPooling2D(pool_size=(2, 4), name='pool2')(x)
+    x = MaxPooling2D(pool_size=(2, 4), name='pool2', dim_ordering="th")(x)
 
     # Conv block 3
     x = Convolution2D(128, 3, 3, border_mode='same', name='conv3')(x)
     x = BatchNormalization(axis=channel_axis, mode=0, name='bn3')(x)
     x = ELU()(x)
-    x = MaxPooling2D(pool_size=(2, 4), name='pool3')(x)
+    x = MaxPooling2D(pool_size=(2, 4), name='pool3', dim_ordering="th")(x)
 
     # Conv block 4
     x = Convolution2D(192, 3, 3, border_mode='same', name='conv4')(x)
     x = BatchNormalization(axis=channel_axis, mode=0, name='bn4')(x)
     x = ELU()(x)
-    x = MaxPooling2D(pool_size=(3, 5), name='pool4')(x)
+    x = MaxPooling2D(pool_size=(3, 5), name='pool4', dim_ordering="th")(x)
 
     # Conv block 5
     x = Convolution2D(256, 3, 3, border_mode='same', name='conv5')(x)
     x = BatchNormalization(axis=channel_axis, mode=0, name='bn5')(x)
     x = ELU()(x)
-    x = MaxPooling2D(pool_size=(4, 4), name='pool5')(x)
+    x = MaxPooling2D(pool_size=(4, 4), name='pool5', dim_ordering="th")(x)
 
     # Output
     x = Flatten(name='Flatten_1')(x)
 
     if weights is None:
         # Create model
-        x = Dense(8, activation='sigmoid', name='output')(x)
+        x = Dense(10, activation='sigmoid', name='output')(x)
         model = Model(melgram_input, x)
         return model
     else:
         # Load input
         x = Dense(50, activation='sigmoid', name='output')(x)
+        print(K.image_dim_ordering())
         if K.image_dim_ordering() == 'tf':
             raise RuntimeError("Please set image_dim_ordering == 'th'."
                                "You can set it at ~/.keras/keras.json")
@@ -152,8 +153,8 @@ def MusicTaggerCNN(weights='msd', input_tensor=None):
 
         # Add new Dense layer
         last = initial_model.get_layer('Flatten_1')
-#         preds = (Dense(10, activation='sigmoid', name='preds'))(last.output)
-        preds = (Dense(8, activation='sigmoid', name='preds'))(last.output)
+        preds = (Dense(10, activation='sigmoid', name='preds'))(last.output)
+#        preds = (Dense(8, activation='sigmoid', name='preds'))(last.output)
         model = Model(initial_model.input, preds)
 
         for layer in model.layers[:-6]:
