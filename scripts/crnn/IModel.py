@@ -4,7 +4,6 @@ import pickle
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
 from keras.callbacks import Callback, ModelCheckpoint
 from keras.utils import np_utils
 import keras.backend.tensorflow_backend as K
@@ -115,15 +114,9 @@ class Model:
         
         
     def get_nb_classes(self):
-        labels_df = pd.read_csv(cfg.DATASET_PATH + 'labels.csv')
-        le = LabelEncoder()
-        le.fit_transform(labels_df.genre.unique())
-
-        tags = le.classes_
-        tags = np.array(tags)
-
-        self.nb_classes = len(tags)
-        self.genres_map = dict(zip(le.classes_, le.transform(le.classes_)))
+        with open(cfg.DATASET_PATH + 'genres_map.pckl', 'rb') as f:
+            self.genres_map = pickle.load(f)
+        self.nb_classes = len(self.genres_map)
         
     def prepare_model(self):
         self.model.compile(loss='categorical_crossentropy',
