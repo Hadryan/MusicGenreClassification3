@@ -27,11 +27,8 @@ sys.path.append('../')
 import config as cfg
 
 
-LOAD_WEIGHTS = 0
-EXP_NAME = cfg.DATASET_PATH.split(os.sep)[-2]
-MODEL_NAME = "14_04_crnn_net_adam_scratch_" + EXP_NAME 
-MODEL_PATH = "models_trained/" + MODEL_NAME + "/"
-WEIGHTS_PATH = "models_trained/" + MODEL_NAME + "/weights/"
+MODEL_PATH = "models_trained/" + cfg.MODEL_NAME + "/"
+WEIGHTS_PATH = MODEL_PATH + "/weights/"
 
 # Create directories for the models & weights
 if not os.path.exists(MODEL_PATH):
@@ -133,13 +130,13 @@ class Model:
               optimizer='adam',
               metrics=['accuracy'])
 
-        if LOAD_WEIGHTS:
+        if cfg.LOAD_WEIGHTS:
             print('Loading weights...')
-            self.model.load_weights(WEIGHTS_PATH + MODEL_NAME + 'epoch{}.h5'.format(LOAD_WEIGHTS))
+            self.model.load_weights(cfg.LOAD_WEIGHTS)
         self.model.summary()
         
     def fit(self):
-        filepath= WEIGHTS_PATH + MODEL_NAME + "_{epoch:02d}-{val_acc:.2f}.hdf5"
+        filepath= WEIGHTS_PATH + "{epoch:02d}-{val_acc:.2f}.hdf5"
         checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
         evluation_callback = Evaluation(validation_data=(self.X_test, self.Y_test))
         callbacks_list = [checkpoint, evluation_callback]

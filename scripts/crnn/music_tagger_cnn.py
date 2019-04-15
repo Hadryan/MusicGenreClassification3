@@ -101,31 +101,31 @@ def MusicTaggerCNN(weights='msd', input_tensor=None, n_classes=10):
     x = BatchNormalization(axis=time_axis, name='bn_0_freq')(melgram_input)
 
     # Conv block 1
-    x = Conv2D(32, (3, 3), padding='same', name='conv1', data_format='channels_first')(x)
+    x = Conv2D(32, (3, 3), padding='same', name='conv1')(x)
     x = BatchNormalization(axis=channel_axis, mode=0, name='bn1')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(2, 4), name='pool1')(x)
 
     # Conv block 2
-    x = Conv2D(128, (3, 3), padding='same', name='conv2', data_format='channels_first')(x)
+    x = Conv2D(128, (3, 3), padding='same', name='conv2')(x)
     x = BatchNormalization(axis=channel_axis, name='bn2')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(2, 4), name='pool2')(x)
 
     # Conv block 3
-    x = Conv2D(128, (3, 3), padding='same', name='conv3', data_format='channels_first')(x)
+    x = Conv2D(128, (3, 3), padding='same', name='conv3')(x)
     x = BatchNormalization(axis=channel_axis, name='bn3')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(2, 4), name='pool3')(x)
 
     # Conv block 4
-    x = Conv2D(192, (3, 3), padding='same', name='conv4', data_format='channels_first')(x)
+    x = Conv2D(192, (3, 3), padding='same', name='conv4')(x)
     x = BatchNormalization(axis=channel_axis, name='bn4')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(3, 5), name='pool4')(x)
 
     # Conv block 5
-    x = Conv2D(256, (3, 3), padding='same', name='conv5', data_format='channels_first')(x)
+    x = Conv2D(256, (3, 3), padding='same', name='conv5')(x)
     x = BatchNormalization(axis=channel_axis, name='bn5')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(4, 4), name='pool5')(x)
