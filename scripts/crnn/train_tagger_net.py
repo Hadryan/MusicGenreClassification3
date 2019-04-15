@@ -10,6 +10,7 @@ import pickle
 from math import floor
 from sklearn.preprocessing import LabelEncoder
 import pandas as pd
+from keras.callbacks import ModelCheckpoint
 
 from music_tagger_cnn import MusicTaggerCNN
 from tagger_net import MusicTaggerCRNN
@@ -36,8 +37,8 @@ SAVE_DB = 0
 LOAD_DB = 0
 
 # Model parameters
-nb_epoch = 45
-batch_size = 200
+nb_epoch = 100
+batch_size = 48
 
 time_elapsed = 0
 
@@ -54,7 +55,8 @@ nb_classes = len(tags)
 genres_map = dict(zip(le.classes_, le.transform(le.classes_)))
 
 # Paths to set
-MODEL_NAME = "crnn_net_adam_fma_small"
+EXP_NAME = cfg.DATASET_PATH.split(os.sep)[-2]
+MODEL_NAME = "crnn_net_adam_" + EXP_NAME 
 MODEL_PATH = "models_trained/" + MODEL_NAME + "/"
 WEIGHTS_PATH = "models_trained/" + MODEL_NAME + "/weights/"
 
@@ -80,8 +82,13 @@ else:
     X_train, y_train = extract_melgrams(cfg.TRAIN_PATH, MULTIFRAMES, process_all_song=False, num_songs_genre=20)
     pickle.dump(X_train, open(cfg.DATASET_PATH + 'train.pckl', "wb"), protocol=4)
     pickle.dump(y_train, open(cfg.DATASET_PATH + 'train_gt.pckl', "wb"), protocol=4)
-    
+
+
+# X_train = X_train[:batch_size*(X_train.shape[0]//batch_size)]
+# y_train = y_train[:batch_size*(X_train.shape[0]//batch_size)]
 print('X_train shape:', X_train.shape)
+
+
 
 print('Extracting features for test set:')
 if os.path.exists(cfg.DATASET_PATH + 'test.pckl'):
@@ -94,6 +101,9 @@ else:
     X_test, y_test = extract_melgrams(cfg.TEST_PATH, MULTIFRAMES, process_all_song=False, num_songs_genre=10)
     pickle.dump(X_test, open(cfg.DATASET_PATH + 'test.pckl', "wb"), protocol=4)
     pickle.dump(y_test, open(cfg.DATASET_PATH + 'test_gt.pckl', "wb"), protocol=4)
+
+# X_test = X_test[:batch_size*(X_test.shape[0]//batch_size)]
+# y_test = y_test[:batch_size*(X_test.shape[0]//batch_size)]
 print('X_test shape:', X_test.shape)
 
 
@@ -109,8 +119,8 @@ print('Shape labels y_test: ', Y_test.shape)
 
 
 # Initialize model
-model = MusicTaggerCRNN(weights='msd', input_tensor=(1, 96, 1366))
-#model = MusicTaggerCNN(weights='msd', input_tensor=(1, 96, 1366))
+# model = MusicTaggerCRNN(weights='msd', input_tensor=(1, 96, 1366))
+model = MusicTaggerCRNN(weights=None, input_tensor=(1, 96, 1366))
 #sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 
 model.compile(loss='categorical_crossentropy',
@@ -133,38 +143,42 @@ if SAVE_MODEL:
 # Train model
 # if TRAIN:
 #     try:
-print ("Training the model")
-f_train = open(MODEL_PATH+MODEL_NAME+"_scores_training.txt", 'w')
-f_test = open(MODEL_PATH+MODEL_NAME+"_scores_test.txt", 'w')
-f_scores = open(MODEL_PATH+MODEL_NAME+"_scores.txt", 'w')
-epoch = None
-for epoch in tqdm(range(LOAD_WEIGHTS + 1,nb_epoch+1)):
-    t0 = time.time()
-    print ("Number of epoch: " +str(epoch)+"/"+str(nb_epoch))
-    sys.stdout.flush()
-    scores = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, verbose=1, validation_data=(X_test, Y_test))
-    time_elapsed = time_elapsed + time.time() - t0
-    print ("Time Elapsed: " +str(time_elapsed))
-    # sys.stdout.flush()
+# print ("Training the model")
+# f_train = open(MODEL_PATH+MODEL_NAME+"_scores_training.txt", 'w')
+# f_test = open(MODEL_PATH+MODEL_NAME+"_scores_test.txt", 'w')
+# f_scores = open(MODEL_PATH+MODEL_NAME+"_scores.txt", 'w')
+# epoch = None
+# for epoch in tqdm(range(LOAD_WEIGHTS + 1,nb_epoch+1)):
+#     t0 = time.time()
+#     print ("Number of epoch: " +str(epoch)+"/"+str(nb_epoch))
+#     sys.stdout.flush()
+#     scores = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, verbose=1, validation_data=(X_test, Y_test))
+#     time_elapsed = time_elapsed + time.time() - t0
+#     print ("Time Elapsed: " +str(time_elapsed))
+#     # sys.stdout.flush()
 
-    # score_train = model.evaluate(X_train, Y_train, verbose=0)
-    # print('Train Loss:', score_train[0])
-    # print('Train Accuracy:', score_train[1])
-    # f_train.write(str(score_train)+"\n")
+#     # score_train = model.evaluate(X_train, Y_train, verbose=0)
+#     # print('Train Loss:', score_train[0])
+#     # print('Train Accuracy:', score_train[1])
+#     # f_train.write(str(score_train)+"\n")
 
-    # score_test = model.evaluate(X_test, Y_test, verbose=0)
-    # print('Test Loss:', score_test[0])
-    # print('Test Accuracy:', score_test[1])
-    # f_test.write(str(score_test)+"\n")
-    # f_scores.write(str(score_train[0])+","+str(score_train[1])+","+str(score_test[0])+","+str(score_test[1]) + "\n")
+#     # score_test = model.evaluate(X_test, Y_test, verbose=0)
+#     # print('Test Loss:', score_test[0])
+#     # print('Test Accuracy:', score_test[1])
+#     # f_test.write(str(score_test)+"\n")
+#     # f_scores.write(str(score_train[0])+","+str(score_train[1])+","+str(score_test[0])+","+str(score_test[1]) + "\n")
 
-    model.save(WEIGHTS_PATH + MODEL_NAME + '_epoch{}.h5'.format(epoch))
+#     model.save(WEIGHTS_PATH + MODEL_NAME + '_epoch{}.h5'.format(epoch))
+filepath= WEIGHTS_PATH + MODEL_NAME + "_weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"
+checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+callbacks_list = [checkpoint]
+# Fit the model
+model.fit(X_train, Y_train, epochs=nb_epoch, batch_size=batch_size, callbacks=callbacks_list, verbose=1, validation_data=(X_test, Y_test))
 
-
-print(epoch)
-f_train.close()
-f_test.close()
-f_scores.close()
+# print(epoch)
+# f_train.close()
+# f_test.close()
+# f_scores.close()
 
 # Save time elapsed
 f = open(MODEL_PATH+MODEL_NAME+"_time_elapsed.txt", 'w')

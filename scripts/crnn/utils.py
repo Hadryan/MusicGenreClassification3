@@ -12,7 +12,7 @@ import pandas as pd
 from tqdm import tqdm
 from sklearn.preprocessing import LabelEncoder
 
-sys.path.append('/home/stasdon/git/musicgenrerecognition/scripts/')
+sys.path.append('../')
 import config as cfg
 
 
@@ -81,14 +81,14 @@ def plot_confusion_matrix(cnf_matrix, classes, title):
 
 
 # Melgram computation
-def extract_melgrams(data_path, MULTIFRAMES, process_all_song, num_songs_genre):
+def extract_melgrams(data_path):#, MULTIFRAMES, process_all_song, num_songs_genre):
     melgrams = np.zeros((0, 1, 96, 1366), dtype=np.float32)
     data = pd.read_csv(data_path)
+    data.track_id = data.track_id.apply(lambda x: '{:04d}.mp3'.format(int(x)))
     song_paths = data.track_id
-    
-    labels_df = pd.read_csv(cfg.DATASET_PATH + 'labels.csv')
+
     le = LabelEncoder()
-    le.fit_transform(labels_df.genre.unique())
+    le.fit_transform(data.genre.unique())
     genres_map = dict(zip(le.classes_, le.transform(le.classes_)))
     
     labels = data.genre.apply(lambda x: genres_map.get(x)).values
