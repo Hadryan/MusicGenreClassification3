@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 import itertools
 import pandas as pd
 from tqdm import tqdm
+import pickle
 from sklearn.preprocessing import LabelEncoder
 
-sys.path.append('../')
+sys.path.append('/home/stasdon/git/musicgenrerecognition/scripts/')
 import config as cfg
 
 
@@ -84,13 +85,11 @@ def plot_confusion_matrix(cnf_matrix, classes, title):
 def extract_melgrams(data_path):#, MULTIFRAMES, process_all_song, num_songs_genre):
     melgrams = np.zeros((0, 1, 96, 1366), dtype=np.float32)
     data = pd.read_csv(data_path)
-    data.track_id = data.track_id.apply(lambda x: '{:04d}.mp3'.format(int(x)))
     song_paths = data.track_id
 
-    le = LabelEncoder()
-    le.fit_transform(data.genre.unique())
-    genres_map = dict(zip(le.classes_, le.transform(le.classes_)))
-    
+    with open(cfg.DATASET_PATH + 'genres_map.pckl', 'rb') as f:
+        genres_map = pickle.load(f)
+        
     labels = data.genre.apply(lambda x: genres_map.get(x)).values
     
     song_labels = []
