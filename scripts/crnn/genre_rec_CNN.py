@@ -10,17 +10,20 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
-from keras import backend as K
+import keras.backend.tensorflow_backend as K
 from keras.layers import Input, Dense
 from keras.models import Model
-from keras.layers import Dense, Dropout, Flatten
-from keras.layers.convolutional import Convolution2D
-from keras.layers.convolutional import MaxPooling2D, ZeroPadding2D
-from keras.layers.normalization import BatchNormalization
+from keras.layers import Dense, Dropout, Reshape, Permute, BatchNormalization
+from keras.layers import MaxPooling2D, ZeroPadding2D, Conv2D, Flatten
+# from keras.layers import Dense, Dropout, Flatten
+# from keras.layers.convolutional import Convolution2D
+# from keras.layers.convolutional import MaxPooling2D, ZeroPadding2D
+# from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import ELU
 from keras.utils.data_utils import get_file
 from keras.layers import Input, Dense
 
+K.set_image_dim_ordering('th')
 
 def pop_layer(model):
     if not model.outputs:
@@ -37,11 +40,34 @@ def pop_layer(model):
     model.built = False
 
 
+<<<<<<< HEAD:scripts/crnn/genre_rec_CNN.py
 def GenreRecCNN(weights='msd', input_tensor=None, n_classes=10):
     '''Creates CNN model for Music Genre Recognition
     
     inputs:
         weights (str): if None (random initialization)
+=======
+def MusicTaggerCNN(weights='msd', input_tensor=None, n_classes=10):
+    '''Instantiate the MusicTaggerCNN architecture,
+    optionally loading weights pre-trained
+    on Million Song Dataset. Note that when using TensorFlow,
+    for best performance you should set
+    `image_dim_ordering="tf"` in your Keras config
+    at ~/.keras/keras.json.
+
+    The model and the weights are compatible with both
+    TensorFlow and Theano. The dimension ordering
+    convention used by the model is the one
+    specified in your Keras config file.
+
+    For preparing mel-spectrogram input, see
+    `audio_conv_utils.py` in [applications](https://github.com/fchollet/keras/tree/master/keras/applications).
+    You will need to install [Librosa](http://librosa.github.io/librosa/)
+    to use it.
+
+    # Arguments
+        weights: one of `None` (random initialization)
+>>>>>>> 28acd9923f65f0392f8edab6b68e23e29e2835ff:scripts/crnn/music_tagger_cnn.py
             or "msd" (pre-training on ImageNet).
         input_tensor (tuple of ints): Keras tensor
             to use as image input for the model.
@@ -78,32 +104,32 @@ def GenreRecCNN(weights='msd', input_tensor=None, n_classes=10):
     x = BatchNormalization(axis=time_axis, name='bn_0_freq')(melgram_input)
 
     # Conv block 1
-    x = Convolution2D(32, 3, 3, border_mode='same', name='conv1')(x)
+    x = Conv2D(32, (3, 3), padding='same', name='conv1')(x)
     x = BatchNormalization(axis=channel_axis, mode=0, name='bn1')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(2, 4), name='pool1')(x)
 
     # Conv block 2
-    x = Convolution2D(128, 3, 3, border_mode='same', name='conv2')(x)
-    x = BatchNormalization(axis=channel_axis, mode=0, name='bn2')(x)
+    x = Conv2D(128, (3, 3), padding='same', name='conv2')(x)
+    x = BatchNormalization(axis=channel_axis, name='bn2')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(2, 4), name='pool2')(x)
 
     # Conv block 3
-    x = Convolution2D(128, 3, 3, border_mode='same', name='conv3')(x)
-    x = BatchNormalization(axis=channel_axis, mode=0, name='bn3')(x)
+    x = Conv2D(128, (3, 3), padding='same', name='conv3')(x)
+    x = BatchNormalization(axis=channel_axis, name='bn3')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(2, 4), name='pool3')(x)
 
     # Conv block 4
-    x = Convolution2D(192, 3, 3, border_mode='same', name='conv4')(x)
-    x = BatchNormalization(axis=channel_axis, mode=0, name='bn4')(x)
+    x = Conv2D(192, (3, 3), padding='same', name='conv4')(x)
+    x = BatchNormalization(axis=channel_axis, name='bn4')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(3, 5), name='pool4')(x)
 
     # Conv block 5
-    x = Convolution2D(256, 3, 3, border_mode='same', name='conv5')(x)
-    x = BatchNormalization(axis=channel_axis, mode=0, name='bn5')(x)
+    x = Conv2D(256, (3, 3), padding='same', name='conv5')(x)
+    x = BatchNormalization(axis=channel_axis, name='bn5')(x)
     x = ELU()(x)
     x = MaxPooling2D(pool_size=(4, 4), name='pool5')(x)
 
@@ -112,27 +138,46 @@ def GenreRecCNN(weights='msd', input_tensor=None, n_classes=10):
 
     if weights is None:
         # Create model
+<<<<<<< HEAD:scripts/crnn/genre_rec_CNN.py
         x = Dense(n_classes, activation='softmax', name='output')(x)
+=======
+        x = Dense(n_classes, activation='sigmoid', name='output')(x)
+>>>>>>> 28acd9923f65f0392f8edab6b68e23e29e2835ff:scripts/crnn/music_tagger_cnn.py
         model = Model(melgram_input, x)
         return model
     else:
         # Load input
         x = Dense(50, activation='sigmoid', name='output')(x)
+<<<<<<< HEAD:scripts/crnn/genre_rec_CNN.py
         # Theano dim ordering is reqeuired to use the pre-trained model
+=======
+        print(K.image_dim_ordering())
+>>>>>>> 28acd9923f65f0392f8edab6b68e23e29e2835ff:scripts/crnn/music_tagger_cnn.py
         if K.image_dim_ordering() == 'tf':
             raise RuntimeError("Please set image_dim_ordering == 'th'."
                                "You can set it at ~/.keras/keras.json")
         # Create model
         initial_model = Model(melgram_input, x)
         
+<<<<<<< HEAD:scripts/crnn/genre_rec_CNN.py
         initial_model.load_weights('/home/stasdon/git/temp/musicgenrerecognition/scripts/crnn/weights/music_tagger_cnn_weights_%s.h5' % K._BACKEND, by_name=True)
+=======
+        # initial_model.load_weights('weights/music_tagger_cnn_weights_%s.h5' % 'theano',
+        #                            by_name=True)
+        initial_model.load_weights('weights/music_tagger_cnn_weights_%s.h5' % 'tensorflow',
+                                   by_name=True)
+>>>>>>> 28acd9923f65f0392f8edab6b68e23e29e2835ff:scripts/crnn/music_tagger_cnn.py
 
         # Eliminate last layer
         pop_layer(initial_model)
 
         # Add new Dense layer
         last = initial_model.get_layer('Flatten_1')
+<<<<<<< HEAD:scripts/crnn/genre_rec_CNN.py
         preds = (Dense(n_classes, activation='softmax', name='preds'))(last.output)
+=======
+        preds = (Dense(n_classes, activation='sigmoid', name='preds'))(last.output)
+>>>>>>> 28acd9923f65f0392f8edab6b68e23e29e2835ff:scripts/crnn/music_tagger_cnn.py
         model = Model(initial_model.input, preds)
 
         for layer in model.layers[:-6]:

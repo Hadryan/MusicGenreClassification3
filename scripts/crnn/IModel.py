@@ -17,6 +17,8 @@ from keras.utils.data_utils import get_file
 import logging
 
 from utils import extract_melgrams
+from music_tagger_cnn import MusicTaggerCNN
+from tagger_net import MusicTaggerCRNN
 sys.path.append('../')
 import config as cfg
 
@@ -33,14 +35,15 @@ if not os.path.exists(WEIGHTS_PATH):
     os.makedirs(WEIGHTS_PATH)
     print('Path created: ', WEIGHTS_PATH)
 
-class TestCallback(Callback):
-    def __init__(self, test_data):
-        self.test_data = test_data
+class Evaluation(Callback):
+    def __init__(self, validation_data=()):
+        super(Callback, self).__init__()
+
+        self.X_test, self.Y_test = validation_data
 
     def on_epoch_end(self, epoch, logs={}):
-        x, y = self.test_data
-        loss, acc = self.model.evaluate(x, y, verbose=0)
-        print('\nTesting loss: {}, acc: {}\n'.format(loss, acc))
+        score = self.model.evaluate(self.X_test, self.Y_test, batch_size=cfg.BATCH_SIZE, verbose=0)
+        logging.info("interval evaluation - epoch: {:d} - score: {:.6f}".format(epoch, score[0]))
 
 
 class Model:
@@ -66,12 +69,42 @@ class Model:
             
         self.X_train, self.X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.33, random_state=23)
         
+#         if os.path.exists(cfg.DATASET_PATH + 'train.pckl'):
+#             with open(cfg.DATASET_PATH + 'train.pckl', 'rb') as f:
+#                 self.X_train = pickle.load(f)
+#             with open(cfg.DATASET_PATH + 'train_gt.pckl', 'rb') as f:
+#                 y_train = pickle.load(f)
+#         else:
+#             self.X_train, y_train = extract_melgrams(cfg.TRAIN_PATH, MULTIFRAMES, process_all_song=False, num_songs_genre=20)
+#             pickle.dump(self.X_train, open(cfg.DATASET_PATH + 'train.pckl', "wb"), protocol=4)
+#             pickle.dump(y_train, open(cfg.DATASET_PATH + 'train_gt.pckl', "wb"), protocol=4)
         print('X_train shape:', self.X_train.shape)
+
+#         print('Extracting features for test set:')
+#         if os.path.exists(cfg.DATASET_PATH + 'test.pckl'):
+#             with open(cfg.DATASET_PATH + 'test.pckl', 'rb') as f:
+#                 self.X_test = pickle.load(f)
+
+#             with open(cfg.DATASET_PATH + 'test_gt.pckl', 'rb') as f:
+#                 y_test = pickle.load(f)
+#         else:
+#             self.X_test, y_test = extract_melgrams(cfg.TEST_PATH, MULTIFRAMES, process_all_song=False, num_songs_genre=10)
+#             pickle.dump(self.X_test, open(cfg.DATASET_PATH + 'test.pckl', "wb"), protocol=4)
+#             pickle.dump(y_test, open(cfg.DATASET_PATH + 'test_gt.pckl', "wb"), protocol=4)
+        
+        # self.X_val = self.X_test[:len(self.X_test)//2]
         
         self.X_val, self.X_test, y_val, y_test = train_test_split(self.X_test, y_test, stratify=y_test, test_size=0.5, random_state=23)
         print('X_val shape:', self.X_val.shape)
+        
+        # self.X_test = self.X_test[len(self.X_test)//2:]
         print('X_test shape:', self.X_test.shape)
         
+#         y_train = np.array(y_train)
+#         y_test = np.array(y_test)
+#         y_val = y_test[:len(y_test)//2]
+#         y_test = y_test[len(y_test)//2:]
+
         self.Y_train = np_utils.to_categorical(y_train, self.nb_classes)
         self.Y_val = np_utils.to_categorical(y_val, self.nb_classes)
         self.Y_test = np_utils.to_categorical(y_test, self.nb_classes)
@@ -95,8 +128,9 @@ class Model:
     def fit(self):
         filepath= WEIGHTS_PATH + "{epoch:02d}-{val_acc:.2f}.hdf5"
         checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-        callbacks_list = [checkpoint, TestCallback((self.X_test, self.Y_test))]
-        self.model.fit(self.X_train, self.Y_train, nb_epoch=cfg.NB_EPOCH, batch_size=cfg.BATCH_SIZE, callbacks=callbacks_list, verbose=1, validation_data=(self.X_val, self.Y_val))
+        evluation_callback = Evaluation(validation_data=(self.X_test, self.Y_test))
+        callbacks_list = [checkpoint, evluation_callback]
+        self.model.fit(self.X_train, self.Y_train, epochs=cfg.NB_EPOCH, batch_size=cfg.BATCH_SIZE, callbacks=callbacks_list, verbose=1, validation_data=(self.X_val, self.Y_val))
         
         
     def evaluate(self):
