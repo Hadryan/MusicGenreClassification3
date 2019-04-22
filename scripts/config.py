@@ -1,18 +1,14 @@
-DATASET_PATH = '/home/stasdon/git/musicgenrerecognition/data/fma_small/'
+import os
+
+DATASET_PATH = '/home/stasdon/git/musicgenrerecognition/data/GTZAN/'
 AUDIO_DIR = DATASET_PATH + 'data/'
+EXP_NAME = DATASET_PATH.split(os.sep)[-2]
+MODEL_NAME = '16_04_cnn_net_transfer_' + EXP_NAME
 
-TRAIN_PATH = DATASET_PATH + 'train.csv'
-TEST_PATH = DATASET_PATH + '/home/stasdon/git/musicgenrerecognition/data/fma_small/test.csv'
+LABELS_PATH = DATASET_PATH + 'labels.csv'
+# TRAIN_PATH = DATASET_PATH + 'train.csv'
+# TEST_PATH = DATASET_PATH + 'test.csv'
 
-GENRES_MAP = {
- 'pop': 0,
- 'metal': 1,
- 'disco': 2,
- 'blues': 3,
- 'reggae': 4,
- 'classical': 5,
- 'rock': 6,
- 'hiphop': 7,
- 'country': 8,
- 'jazz': 9
-}
+LOAD_WEIGHTS = ''
+BATCH_SIZE = 128
+NB_EPOCH = 40
