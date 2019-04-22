@@ -19,18 +19,6 @@ import config as cfg
 
 
 def compute_melgram(audio_path):
-    ''' Compute a mel-spectrogram and returns it in a shape of (1,1,96,1366), where
-    96 == #mel-bins and 1366 == #time frame
-
-    parameters
-    ----------
-    audio_path: path for the audio file.
-                Any format supported by audioread will work.
-    More info: http://librosa.github.io/librosa/generated/librosa.core.load.html#librosa.core.load
-
-    '''
-
-    # mel-spectrogram parameters
     SR = 12000
     N_FFT = 512
     N_MELS = 96
@@ -60,7 +48,7 @@ def load_gt(path):
     return labels
 
     
-def extract_melgrams(data_path):#, MULTIFRAMES, process_all_song, num_songs_genre):
+def extract_melgrams(data_path):
     melgrams = np.zeros((0, 1, 96, 1366), dtype=np.float32)
     data = pd.read_csv(data_path)
     song_paths = data.track_id
