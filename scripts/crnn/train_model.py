@@ -4,6 +4,3 @@ from genre_rec_CRNN import GenreRecCRNN
 
 model = Model(GenreRecCNN)
 model.fit()
-
-
-
