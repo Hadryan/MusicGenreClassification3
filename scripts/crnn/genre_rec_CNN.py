@@ -112,7 +112,7 @@ def GenreRecCNN(weights='msd', input_tensor=None, n_classes=10):
 
     if weights is None:
         # Create model
-        x = Dense(n_classes, activation='sigmoid', name='output')(x)
+        x = Dense(n_classes, activation='softmax', name='output')(x)
         model = Model(melgram_input, x)
         return model
     else:
@@ -132,7 +132,7 @@ def GenreRecCNN(weights='msd', input_tensor=None, n_classes=10):
 
         # Add new Dense layer
         last = initial_model.get_layer('Flatten_1')
-        preds = (Dense(n_classes, activation='sigmoid', name='preds'))(last.output)
+        preds = (Dense(n_classes, activation='softmax', name='preds'))(last.output)
         model = Model(initial_model.input, preds)
 
         for layer in model.layers[:-6]:
